@@ -243,6 +243,32 @@ textarea {
   width: auto;
 }
 
+.password-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.password-wrapper input {
+  padding-right: 44px;
+}
+
+.toggle-pass {
+  position: absolute;
+  right: 6px;
+  background: transparent;
+  border: none;
+  color: var(--azul-claro);
+  cursor: pointer;
+  font-size: 16px;
+  padding: 6px 8px;
+  line-height: 1;
+}
+
+.toggle-pass:hover {
+  color: var(--amarelo);
+}
+
 .btn-primary, .btn-secondary, .btn-danger {
   padding: 12px 20px;
   border: none;
