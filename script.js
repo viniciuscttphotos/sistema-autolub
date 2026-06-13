@@ -5,7 +5,7 @@
  * publicado no Google Apps Script.
  ********************************************************************/
 
-const API_URL = "https://script.google.com/macros/s/AKfycbznHIzPydVRdRNHMZHGHmPrsA-Qzil5PYaSluokuwZYKZvdNI_HOtW-M_8ggbLrzCaY/exec";
+const API_URL = "COLE_AQUI_A_URL_DO_SEU_APPS_SCRIPT";
 
 let NIVEL_ACESSO = ""; // "geral" ou "financeiro"
 
@@ -86,6 +86,18 @@ function mostrarApp() {
   }
 
   setupTabs();
+}
+
+// ===================== UI HELPERS =====================
+function togglePassword(inputId, btn) {
+  const input = document.getElementById(inputId);
+  if (input.type === "password") {
+    input.type = "text";
+    btn.textContent = "🙈";
+  } else {
+    input.type = "password";
+    btn.textContent = "👁";
+  }
 }
 
 // ===================== ABAS =====================
@@ -329,13 +341,6 @@ async function salvarEdicao() {
 
 async function excluirLancamento() {
   const msgEl = document.getElementById("editMsg");
-  const senha = document.getElementById("editSenha").value;
-
-  if (!senha) {
-    msgEl.textContent = "Digite a senha financeira para excluir.";
-    msgEl.className = "msg erro";
-    return;
-  }
 
   if (!confirm("Tem certeza que deseja excluir este lançamento?")) return;
 
@@ -344,8 +349,7 @@ async function excluirLancamento() {
 
   const result = await apiRequest({
     action: "deleteLancamento",
-    id: document.getElementById("editId").value,
-    senha: senha
+    id: document.getElementById("editId").value
   });
 
   if (result.success) {
@@ -367,6 +371,7 @@ function verificarAcessoRelatorio() {
   if (liberado) {
     document.getElementById("relatorioBloqueado").classList.add("hidden");
     document.getElementById("relatorioConteudo").classList.remove("hidden");
+    gerarRelatorio("diario");
   } else {
     document.getElementById("relatorioBloqueado").classList.remove("hidden");
     document.getElementById("relatorioConteudo").classList.add("hidden");
@@ -383,6 +388,7 @@ async function liberarRelatorios() {
     sessionStorage.setItem("autolub_financeiro", "true");
     verificarAcessoRelatorio();
     erroEl.textContent = "";
+    gerarRelatorio("diario");
   } else {
     erroEl.textContent = "Senha incorreta.";
   }
