@@ -14,7 +14,7 @@
     <h1 class="logo">AUTO<span>LUB</span></h1>
     <p class="subtitle">Livro Caixa</p>
     <div class="password-wrapper">
-      <input type="text" id="loginSenha" placeholder="Digite a senha de acesso" style="-webkit-text-security:disc" />
+      <input type="password" id="loginSenha" placeholder="Digite a senha de acesso" autocomplete="current-password" />
       <button type="button" class="toggle-pass" onclick="togglePassword('loginSenha', this)" title="Mostrar/ocultar senha">
         <svg class="eye-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
       </button>
@@ -131,7 +131,7 @@
       <div id="relatorioBloqueado" class="bloqueio">
         <p>Esta área é restrita. Digite a senha financeira para acessar.</p>
         <div class="password-wrapper">
-      <input type="text" id="senhaRelatorio" placeholder="Senha financeira" style="-webkit-text-security:disc" />
+      <input type="password" id="senhaRelatorio" placeholder="Senha financeira" autocomplete="off" />
       <button type="button" class="toggle-pass" onclick="togglePassword('senhaRelatorio', this)" title="Mostrar/ocultar senha">
         <svg class="eye-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
       </button>
@@ -216,7 +216,7 @@
     <div class="form-group">
       <label>Senha Financeira (necessária para salvar alterações)</label>
       <div class="password-wrapper">
-        <input type="text" id="editSenha" placeholder="Necessária para salvar alterações" style="-webkit-text-security:disc" />
+        <input type="password" id="editSenha" placeholder="Necessária para salvar alterações" autocomplete="off" />
         <button type="button" class="toggle-pass" onclick="togglePassword('editSenha', this)" title="Mostrar/ocultar senha">
           <svg class="eye-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
         </button>
