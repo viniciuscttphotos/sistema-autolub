@@ -13,7 +13,10 @@
   <div class="login-box">
     <h1 class="logo">AUTO<span>LUB</span></h1>
     <p class="subtitle">Livro Caixa</p>
-    <input type="password" id="loginSenha" placeholder="Digite a senha de acesso" />
+    <div class="password-wrapper">
+      <input type="password" id="loginSenha" placeholder="Digite a senha de acesso" />
+      <button type="button" class="toggle-pass" onclick="togglePassword('loginSenha', this)">👁</button>
+    </div>
     <button onclick="doLogin()">Entrar</button>
     <p id="loginErro" class="erro"></p>
   </div>
@@ -125,7 +128,10 @@
 
       <div id="relatorioBloqueado" class="bloqueio">
         <p>Esta área é restrita. Digite a senha financeira para acessar.</p>
-        <input type="password" id="senhaRelatorio" placeholder="Senha financeira" />
+        <div class="password-wrapper">
+      <input type="password" id="senhaRelatorio" placeholder="Senha financeira" />
+      <button type="button" class="toggle-pass" onclick="togglePassword('senhaRelatorio', this)">👁</button>
+    </div>
         <button class="btn-primary" onclick="liberarRelatorios()">Acessar</button>
         <p id="relatorioErro" class="erro"></p>
       </div>
@@ -204,8 +210,11 @@
       <input type="number" id="editParcelas" min="0" max="12" />
     </div>
     <div class="form-group">
-      <label>Senha Financeira</label>
-      <input type="password" id="editSenha" placeholder="Necessária para salvar ou excluir" />
+      <label>Senha Financeira (necessária para salvar alterações)</label>
+      <div class="password-wrapper">
+        <input type="password" id="editSenha" placeholder="Necessária para salvar alterações" />
+        <button type="button" class="toggle-pass" onclick="togglePassword('editSenha', this)">👁</button>
+      </div>
     </div>
 
     <div class="modal-actions">
