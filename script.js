@@ -5,7 +5,7 @@
  * publicado no Google Apps Script.
  ********************************************************************/
 
-const API_URL = "COLE_AQUI_A_URL_DO_SEU_APPS_SCRIPT";
+const API_URL = "https://script.google.com/macros/s/AKfycbznHIzPydVRdRNHMZHGHmPrsA-Qzil5PYaSluokuwZYKZvdNI_HOtW-M_8ggbLrzCaY/exec";
 
 let NIVEL_ACESSO = ""; // "geral" ou "financeiro"
 
