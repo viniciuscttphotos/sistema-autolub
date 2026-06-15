@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Autolub - Livro Caixa</title>
+<link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+<!-- =========================
+<!-- ===================== TELA DE LOGIN ===================== -->
+<div id="loginScreen" class="screen">
+  <div class="login-box">
+    <div class="login-theme-toggle">
+      <button class="btn-tertiary" onclick="toggleTheme()" title="Alternar tema">
+        <svg id="loginThemeIcon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+        </svg>
+        <span id="loginThemeText">Tema Claro</span>
+      </button>
+    </div>
+    <h1 class="logo">AUTO<span>LUB</span></h1>
+    <p class="subtitle">Livro Caixa</p>
+    
+    <div class="login-form-group">
+      <label for="loginSenha">Senha de Acesso</label>
+      <div class="password-wrapper">
+        <input type="password" id="loginSenha" placeholder="Digite a senha" autocomplete="current-password" />
+        <button type="button" class="toggle-pass" onclick="togglePassword('loginSenha', this)" title="Mostrar/ocultar senha">
+          <svg class="eye-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+        </button>
+      </div>
+    </div>
+    
+    <div class="remember-group">
+      <label class="remember-label">
+        <input type="checkbox" id="rememberMe" />
+        <span>Lembrar-me</span>
+      </label>
+      <a href="#" class="forgot-link" onclick="event.preventDefault(); alert('Entre em contato com o administrador para recuperar a senha.')">Esqueci a senha</a>
+    </div>
+    
+    <button class="btn-primary" onclick="doLogin()">Entrar</button>
+    <p id="loginErro" class="erro"></p>
+  </div>
+</div>
+
+<!-- ===================== APP ===================== -->
+<div id="app" class="screen hidden">
+
+  <header class="topbar">
+    <h1 class="logo">AUTO<span>LUB</span></h1>
+    <nav class="tabs">
+      <button class="tab-btn active" data-tab="lancamento">Novo Lançamento</button>
+      <button class="tab-btn" data-tab="historico">Histórico</button>
+      <button class="tab-btn" data-tab="relatorios">Relatórios</button>
+      <button class="tab-btn" data-tab="locadores">Locadores</button>
+    </nav>
+    <div class="theme-toggle">
+      <button class="btn-secondary" id="themeToggleBtn" onclick="toggleTheme()" title="Alternar tema">
+        <svg id="themeIcon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+        </svg>
+        <span id="themeText">Tema Claro</span>
+      </button>
+    </div>
+    <button class="logout-btn" onclick="logout()">Sair</button>
+  </header>
+
+  <main>
+
+    <!-- ===================== ABA: NOVO LANÇAMENTO ===================== -->
+    <section id="tab-lancamento" class="tab-content active">
+      <h2>Novo Lançamento</h2>
+      <form id="formLancamento">
+
+        <div class="form-group">
+          <label>Atendente</label>
+          <select id="atendenteSelect" onchange="toggleOutroAtendente()">
+            <option value="Paulinho">Paulinho</option>
+            <option value="Luan">Luan</option>
+            <option value="Outros">Outros</option>
+          </select>
+          <input type="text" id="atendenteOutro" class="hidden" placeholder="Digite o nome do atendente" />
+        </div>
+
+        <div class="form-group">
+          <label>Serviço / Produtos</label>
+          <textarea id="servico" rows="3" placeholder="Descreva o serviço prestado e/ou produtos vendidos" required></textarea>
+        </div>
+
+        <div class="form-group">
+          <label>Valor (R$)</label>
+          <input type="number" id="valor" step="0.01" min="0" placeholder="0.00" required />
+        </div>
+
+        <div class="form-group">
+          <label>Forma de Pagamento</label>
+          <select id="formaPagamento" onchange="togglePagamento()">
+            <option value="Dinheiro">Dinheiro</option>
+            <option value="Débito">Cartão de Débito</option>
+            <option value="Pix">Pix</option>
+            <option value="Crédito">Cartão de Crédito</option>
+          </select>
+        </div>
+
+        <div class="form-group hidden" id="parcelasGroup">
+          <label>Número de Parcelas (0 ou 1 = crédito à vista)</label>
+          <input type="number" id="parcelas" min="0" max="12" value="1" />
+        </div>
+
+        <div class="form-group checkbox-group">
+          <label class="checkbox-label">
+            <input type="checkbox" id="locadoraCheck" onchange="toggleLocador()" />
+            Carro de Locadora
+          </label>
+        </div>
+
+        <div class="form-group hidden" id="locadorGroup">
+          <label>Locador</label>
+          <select id="locadorSelect"></select>
+        </div>
+
+        <button type="submit" class="btn-primary">Salvar Lançamento</button>
+        <p id="lancamentoMsg" class="msg"></p>
+      </form>
+    </section>
+
+    <!-- ===================== ABA: HISTÓRICO ===================== -->
+    <section id="tab-historico" class="tab-content">
+      <h2>Histórico de Lançamentos</h2>
+
+      <div class="filtros">
+        <div class="form-group">
+          <label>Data Início</label>
+          <input type="date" id="histDataInicio" />
+        </div>
+        <div class="form-group">
+          <label>Data Fim</label>
+          <input type="date" id="histDataFim" />
+        </div>
+        <div class="form-group">
+          <label>Atendente</label>
+          <select id="histAtendente">
+            <option value="">Todos</option>
+            <option value="Paulinho">Paulinho</option>
+            <option value="Luan">Luan</option>
+          </select>
+        </div>
+        <button class="btn-secondary" onclick="carregarHistorico()">Filtrar</button>
+      </div>
+
+      <div id="historicoLista" class="lista"></div>
+    </section>
+
+    <!-- ===================== ABA: RELATÓRIOS ===================== -->
+    <section id="tab-relatorios" class="tab-content">
+      <h2>Relatórios</h2>
+
+      <div id="relatorioBloqueado" class="bloqueio">
+        <p>Esta área é restrita. Digite a senha financeira para acessar.</p>
+        <div class="password-wrapper">
+      <input type="password" id="senhaRelatorio" placeholder="Senha financeira" autocomplete="off" />
+      <button type="button" class="toggle-pass" onclick="togglePassword('senhaRelatorio', this)" title="Mostrar/ocultar senha">
+        <svg class="eye-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+      </button>
+    </div>
+        <button class="btn-primary" onclick="liberarRelatorios()">Acessar</button>
+        <p id="relatorioErro" class="erro"></p>
+      </div>
+
+      <div id="relatorioConteudo" class="hidden">
+
+        <div class="filtros">
+          <button class="btn-secondary" onclick="gerarRelatorio('diario')">Diário</button>
+          <button class="btn-secondary" onclick="gerarRelatorio('semanal')">Semanal</button>
+          <button class="btn-secondary" onclick="gerarRelatorio('mensal')">Mensal</button>
+        </div>
+
+        <div class="filtros">
+          <div class="form-group">
+            <label>Data Início</label>
+            <input type="date" id="relDataInicio" />
+          </div>
+          <div class="form-group">
+            <label>Data Fim</label>
+            <input type="date" id="relDataFim" />
+          </div>
+          <button class="btn-secondary" onclick="gerarRelatorio('custom')">Buscar Período</button>
+        </div>
+
+        <div id="relatorioResultado"></div>
+
+      </div>
+    </section>
+
+    <!-- ===================== ABA: LOCADORES ===================== -->
+    <section id="tab-locadores" class="tab-content">
+      <h2>Gerenciar Locadores</h2>
+
+      <div class="form-group">
+        <label>Novo Locador</label>
+        <input type="text" id="novoLocador" placeholder="Nome do locador" />
+        <button class="btn-primary" onclick="adicionarLocador()">Adicionar</button>
+        <p id="locadorMsg" class="msg"></p>
+      </div>
+
+      <div id="locadoresLista" class="lista"></div>
+    </section>
+
+  </main>
+</div>
+
+<!-- ===================== MODAL EDIÇÃO ===================== -->
+<div id="editModal" class="modal hidden">
+  <div class="modal-box">
+    <h3>Editar / Excluir Lançamento</h3>
+    <input type="hidden" id="editId" />
+
+    <div class="form-group">
+      <label>Atendente</label>
+      <input type="text" id="editAtendente" />
+    </div>
+    <div class="form-group">
+      <label>Serviço</label>
+      <textarea id="editServico" rows="2"></textarea>
+    </div>
+    <div class="form-group">
+      <label>Valor (R$)</label>
+      <input type="number" id="editValor" step="0.01" />
+    </div>
+    <div class="form-group">
+      <label>Forma de Pagamento</label>
+      <select id="editFormaPagamento">
+        <option value="Dinheiro">Dinheiro</option>
+        <option value="Débito">Cartão de Débito</option>
+        <option value="Pix">Pix</option>
+        <option value="Crédito">Cartão de Crédito</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label>Parcelas</label>
+      <input type="number" id="editParcelas" min="0" max="12" />
+    </div>
+    <div class="form-group">
+      <label>Senha Financeira (necessária para salvar alterações)</label>
+      <div class="password-wrapper">
+        <input type="password" id="editSenha" placeholder="Necessária para salvar alterações" autocomplete="off" />
+        <button type="button" class="toggle-pass" onclick="togglePassword('editSenha', this)" title="Mostrar/ocultar senha">
+          <svg class="eye-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+        </button>
+      </div>
+    </div>
+
+    <div class="modal-actions">
+      <button class="btn-primary" onclick="salvarEdicao()">Salvar Alterações</button>
+      <button class="btn-danger" onclick="excluirLancamento()">Excluir</button>
+      <button class="btn-secondary" onclick="fecharModal()">Cancelar</button>
+    </div>
+    <p id="editMsg" class="msg"></p>
+  </div>
+</div>
+
+<script src="script.js"></script>
+</body>
+</html>
