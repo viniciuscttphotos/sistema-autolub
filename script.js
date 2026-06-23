@@ -419,7 +419,8 @@ async function gerarRelatorio(tipo) {
   resultadoDiv.innerHTML = "<p>Gerando relatório...</p>";
 
   const params = {
-    action: "relatorio"
+    action: "relatorio",
+    senha: "ricardo26"
   };
 
   if (tipo === "custom") {
