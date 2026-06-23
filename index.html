@@ -33,14 +33,6 @@
       </div>
     </div>
     
-    <div class="remember-group">
-      <label class="remember-label">
-        <input type="checkbox" id="rememberMe" />
-        <span>Lembrar-me</span>
-      </label>
-      <a href="#" class="forgot-link" onclick="event.preventDefault(); alert('Entre em contato com o administrador para recuperar a senha.')">Esqueci a senha</a>
-    </div>
-    
     <button class="btn-primary" onclick="doLogin()">Entrar</button>
     <p id="loginErro" class="erro"></p>
   </div>
@@ -125,6 +117,21 @@
         <button type="submit" class="btn-primary">Salvar Lançamento</button>
         <p id="lancamentoMsg" class="msg"></p>
       </form>
+
+      <!-- ===================== FILA DIGITAL ===================== -->
+      <div class="fila-digital">
+        <h2>Fila Digital</h2>
+        <div class="fila-input-group">
+          <input type="text" id="filaInput" placeholder="Nome do próximo cliente / item" />
+          <button type="button" class="btn-fila-confirmar" onclick="confirmarFila()">Confirmar</button>
+        </div>
+        <div class="fila-acoes">
+          <button type="button" class="btn-fila-riscar" onclick="riscarFila()">Riscar</button>
+          <button type="button" class="btn-fila-limpar" onclick="limparFila()">Limpar Fila</button>
+        </div>
+        <ul id="filaLista" class="fila-lista"></ul>
+        <p id="filaMsg" class="msg"></p>
+      </div>
     </section>
 
     <!-- ===================== ABA: HISTÓRICO ===================== -->
@@ -158,19 +165,7 @@
     <section id="tab-relatorios" class="tab-content">
       <h2>Relatórios</h2>
 
-      <div id="relatorioBloqueado" class="bloqueio">
-        <p>Esta área é restrita. Digite a senha financeira para acessar.</p>
-        <div class="password-wrapper">
-      <input type="password" id="senhaRelatorio" placeholder="Senha financeira" autocomplete="off" />
-      <button type="button" class="toggle-pass" onclick="togglePassword('senhaRelatorio', this)" title="Mostrar/ocultar senha">
-        <svg class="eye-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
-      </button>
-    </div>
-        <button class="btn-primary" onclick="liberarRelatorios()">Acessar</button>
-        <p id="relatorioErro" class="erro"></p>
-      </div>
-
-      <div id="relatorioConteudo" class="hidden">
+      <div id="relatorioConteudo">
 
         <div class="filtros">
           <button class="btn-secondary" onclick="gerarRelatorio('diario')">Diário</button>
@@ -243,22 +238,20 @@
       <label>Parcelas</label>
       <input type="number" id="editParcelas" min="0" max="12" />
     </div>
-    <div class="form-group">
-      <label>Senha Financeira (necessária para salvar alterações)</label>
-      <div class="password-wrapper">
-        <input type="password" id="editSenha" placeholder="Necessária para salvar alterações" autocomplete="off" />
-        <button type="button" class="toggle-pass" onclick="togglePassword('editSenha', this)" title="Mostrar/ocultar senha">
-          <svg class="eye-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
-        </button>
-      </div>
-    </div>
-
     <div class="modal-actions">
       <button class="btn-primary" onclick="salvarEdicao()">Salvar Alterações</button>
       <button class="btn-danger" onclick="excluirLancamento()">Excluir</button>
       <button class="btn-secondary" onclick="fecharModal()">Cancelar</button>
     </div>
     <p id="editMsg" class="msg"></p>
+  </div>
+</div>
+
+<!-- ===================== POPUP ===================== -->
+<div id="popupSalvando" class="popup-overlay hidden">
+  <div class="popup-box">
+    <div class="popup-spinner"></div>
+    <p id="popupTexto">Salvando...</p>
   </div>
 </div>
 

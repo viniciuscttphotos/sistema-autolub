@@ -7,8 +7,6 @@
 
 const API_URL = "https://script.google.com/macros/s/AKfycbznHIzPydVRdRNHMZHGHmPrsA-Qzil5PYaSluokuwZYKZvdNI_HOtW-M_8ggbLrzCaY/exec";
 
-let NIVEL_ACESSO = ""; // "geral" ou "financeiro"
-
 // ===================== TEMA =====================
 function initTheme() {
   const savedTheme = localStorage.getItem("autolub_theme") || "dark";
@@ -46,45 +44,20 @@ function updateThemeUI(theme) {
   }
 }
 
-// ===================== REMEMBER ME =====================
-function initRememberMe() {
-  const rememberMe = localStorage.getItem("autolub_remember");
-  const rememberCheckbox = document.getElementById("rememberMe");
-  
-  if (rememberMe && rememberCheckbox) {
-    rememberCheckbox.checked = true;
-    // Opcional: preencher o usuário se houver dados salvos
-  }
-}
 
-function handleRememberMe() {
-  const rememberCheckbox = document.getElementById("rememberMe");
-  if (rememberCheckbox && rememberCheckbox.checked) {
-    localStorage.setItem("autolub_remember", "true");
-  } else {
-    localStorage.removeItem("autolub_remember");
-  }
-}
 
 // ===================== INIT =====================
 window.addEventListener("DOMContentLoaded", () => {
   initTheme();
-  initRememberMe();
   
-  const sessao = sessionStorage.getItem("autolub_nivel");
-  if (sessao) {
-    NIVEL_ACESSO = sessao;
+  if (sessionStorage.getItem("autolub_logado")) {
     mostrarApp();
   }
 
   document.getElementById("formLancamento").addEventListener("submit", salvarLancamento);
 
-  // Atalho: pressionar Enter no campo de senha do login
   document.getElementById("loginSenha").addEventListener("keypress", (e) => {
     if (e.key === "Enter") doLogin();
-  });
-  document.getElementById("senhaRelatorio").addEventListener("keypress", (e) => {
-    if (e.key === "Enter") liberarRelatorios();
   });
 });
 
@@ -102,7 +75,7 @@ async function apiRequest(params) {
 }
 
 // ===================== LOGIN =====================
-async function doLogin() {
+function doLogin() {
   const senha = document.getElementById("loginSenha").value;
   const erroEl = document.getElementById("loginErro");
 
@@ -111,23 +84,18 @@ async function doLogin() {
     return;
   }
 
-  erroEl.textContent = "Verificando...";
-
-  const result = await apiRequest({ action: "login", senha: senha });
-
-  if (result.success) {
-    NIVEL_ACESSO = result.nivel;
-    sessionStorage.setItem("autolub_nivel", NIVEL_ACESSO);
+  if (senha === "ricardo26") {
+    sessionStorage.setItem("autolub_logado", "true");
     mostrarApp();
   } else {
-    erroEl.textContent = result.message || "Senha incorreta.";
+    erroEl.textContent = "Senha incorreta.";
   }
 }
 
 function logout() {
-  sessionStorage.removeItem("autolub_nivel");
+  sessionStorage.removeItem("autolub_logado");
   sessionStorage.removeItem("autolub_financeiro");
-  NIVEL_ACESSO = "";
+  sessionStorage.removeItem("autolub_financeiro_senha");
   document.getElementById("app").classList.add("hidden");
   document.getElementById("loginScreen").classList.remove("hidden");
   document.getElementById("loginSenha").value = "";
@@ -139,12 +107,6 @@ function mostrarApp() {
 
   carregarLocadores();
   carregarHistorico();
-
-  // Se já entrou direto com senha financeira, libera relatórios automaticamente
-  if (NIVEL_ACESSO === "financeiro") {
-    sessionStorage.setItem("autolub_financeiro", "true");
-  }
-
   setupTabs();
 }
 
@@ -229,14 +191,11 @@ async function carregarLocadores() {
 async function salvarLancamento(e) {
   e.preventDefault();
 
-  const msgEl = document.getElementById("lancamentoMsg");
-  msgEl.textContent = "Salvando...";
-  msgEl.className = "msg";
-
   let atendente = document.getElementById("atendenteSelect").value;
   if (atendente === "Outros") {
     atendente = document.getElementById("atendenteOutro").value.trim();
     if (!atendente) {
+      const msgEl = document.getElementById("lancamentoMsg");
       msgEl.textContent = "Digite o nome do atendente.";
       msgEl.className = "msg erro";
       return;
@@ -250,6 +209,8 @@ async function salvarLancamento(e) {
   const locadora = document.getElementById("locadoraCheck").checked;
   const locador = locadora ? document.getElementById("locadorSelect").value : "";
 
+  mostrarPopup("Salvando...");
+
   const result = await apiRequest({
     action: "addLancamento",
     atendente: atendente,
@@ -262,17 +223,46 @@ async function salvarLancamento(e) {
   });
 
   if (result.success) {
-    msgEl.textContent = "Lançamento salvo com sucesso!";
-    msgEl.className = "msg sucesso";
-    document.getElementById("formLancamento").reset();
-    document.getElementById("atendenteOutro").classList.add("hidden");
-    document.getElementById("parcelasGroup").classList.add("hidden");
-    document.getElementById("locadorGroup").classList.add("hidden");
-    carregarHistorico();
+    setTimeout(() => {
+      atualizarPopup("Salvo");
+      setTimeout(() => {
+        fecharPopup();
+        document.getElementById("formLancamento").reset();
+        document.getElementById("atendenteOutro").classList.add("hidden");
+        document.getElementById("parcelasGroup").classList.add("hidden");
+        document.getElementById("locadorGroup").classList.add("hidden");
+        carregarHistorico();
+      }, 2000);
+    }, 5000);
   } else {
+    fecharPopup();
+    const msgEl = document.getElementById("lancamentoMsg");
     msgEl.textContent = result.message || "Erro ao salvar.";
     msgEl.className = "msg erro";
   }
+}
+
+// ===================== POPUP =====================
+function mostrarPopup(texto) {
+  const popup = document.getElementById("popupSalvando");
+  const textoEl = document.getElementById("popupTexto");
+  if (!popup) return;
+  textoEl.textContent = texto;
+  popup.classList.remove("hidden");
+  popup.classList.remove("popup-sucesso");
+}
+
+function atualizarPopup(texto) {
+  const textoEl = document.getElementById("popupTexto");
+  if (!textoEl) return;
+  textoEl.textContent = texto;
+  const popup = document.getElementById("popupSalvando");
+  if (popup) popup.classList.add("popup-sucesso");
+}
+
+function fecharPopup() {
+  const popup = document.getElementById("popupSalvando");
+  if (popup) popup.classList.add("hidden");
 }
 
 // ===================== HISTÓRICO =====================
@@ -351,7 +341,6 @@ function abrirModalEdicao(item) {
   document.getElementById("editValor").value = item.Valor;
   document.getElementById("editFormaPagamento").value = item.FormaPagamento;
   document.getElementById("editParcelas").value = item.Parcelas || 0;
-  document.getElementById("editSenha").value = "";
   document.getElementById("editMsg").textContent = "";
 
   document.getElementById("editModal").classList.remove("hidden");
@@ -363,15 +352,8 @@ function fecharModal() {
 
 async function salvarEdicao() {
   const msgEl = document.getElementById("editMsg");
-  msgEl.textContent = "Salvando...";
-  msgEl.className = "msg";
 
-  const senha = document.getElementById("editSenha").value;
-  if (!senha) {
-    msgEl.textContent = "Digite a senha financeira.";
-    msgEl.className = "msg erro";
-    return;
-  }
+  mostrarPopup("Salvando...");
 
   const result = await apiRequest({
     action: "editLancamento",
@@ -380,18 +362,18 @@ async function salvarEdicao() {
     servico: document.getElementById("editServico").value,
     valor: document.getElementById("editValor").value,
     formaPagamento: document.getElementById("editFormaPagamento").value,
-    parcelas: document.getElementById("editParcelas").value,
-    senha: senha
+    parcelas: document.getElementById("editParcelas").value
   });
 
   if (result.success) {
-    msgEl.textContent = "Atualizado com sucesso!";
-    msgEl.className = "msg sucesso";
+    atualizarPopup("Salvo");
     setTimeout(() => {
+      fecharPopup();
       fecharModal();
       carregarHistorico();
-    }, 800);
+    }, 5000);
   } else {
+    fecharPopup();
     msgEl.textContent = result.message;
     msgEl.className = "msg erro";
   }
@@ -402,22 +384,23 @@ async function excluirLancamento() {
 
   if (!confirm("Tem certeza que deseja excluir este lançamento?")) return;
 
-  msgEl.textContent = "Excluindo...";
-  msgEl.className = "msg";
+  mostrarPopup("Excluindo...");
 
   const result = await apiRequest({
     action: "deleteLancamento",
-    id: document.getElementById("editId").value
+    id: document.getElementById("editId").value,
+    senha: "ricardo26"
   });
 
   if (result.success) {
-    msgEl.textContent = "Excluído com sucesso!";
-    msgEl.className = "msg sucesso";
+    atualizarPopup("Excluído");
     setTimeout(() => {
+      fecharPopup();
       fecharModal();
       carregarHistorico();
-    }, 800);
+    }, 5000);
   } else {
+    fecharPopup();
     msgEl.textContent = result.message;
     msgEl.className = "msg erro";
   }
@@ -425,42 +408,18 @@ async function excluirLancamento() {
 
 // ===================== RELATÓRIOS =====================
 function verificarAcessoRelatorio() {
-  const liberado = sessionStorage.getItem("autolub_financeiro") === "true";
-  if (liberado) {
-    document.getElementById("relatorioBloqueado").classList.add("hidden");
-    document.getElementById("relatorioConteudo").classList.remove("hidden");
-    gerarRelatorio("diario");
-  } else {
-    document.getElementById("relatorioBloqueado").classList.remove("hidden");
-    document.getElementById("relatorioConteudo").classList.add("hidden");
+  if (!sessionStorage.getItem("autolub_logado")) {
+    return;
   }
-}
-
-async function liberarRelatorios() {
-  const senha = document.getElementById("senhaRelatorio").value;
-  const erroEl = document.getElementById("relatorioErro");
-
-  const result = await apiRequest({ action: "login", senha: senha });
-
-  if (result.success && result.nivel === "financeiro") {
-    sessionStorage.setItem("autolub_financeiro", "true");
-    verificarAcessoRelatorio();
-    erroEl.textContent = "";
-    gerarRelatorio("diario");
-  } else {
-    erroEl.textContent = "Senha incorreta.";
-  }
+  gerarRelatorio("diario");
 }
 
 async function gerarRelatorio(tipo) {
   const resultadoDiv = document.getElementById("relatorioResultado");
   resultadoDiv.innerHTML = "<p>Gerando relatório...</p>";
 
-  const senha = sessionStorage.getItem("autolub_financeiro_senha") || document.getElementById("senhaRelatorio").value;
-
   const params = {
-    action: "relatorio",
-    senha: senha || prompt("Confirme a senha financeira:")
+    action: "relatorio"
   };
 
   if (tipo === "custom") {
@@ -482,9 +441,6 @@ async function gerarRelatorio(tipo) {
     resultadoDiv.innerHTML = `<p class="erro">${result.message}</p>`;
     return;
   }
-
-  // Salva senha para próximas requisições na sessão
-  sessionStorage.setItem("autolub_financeiro_senha", params.senha);
 
   renderizarRelatorio(result.data);
 }
@@ -630,3 +586,126 @@ async function removerLocador(nome) {
     alert(result.message);
   }
 }
+
+// ===================== FILA DIGITAL =====================
+const FILA_STORAGE_KEY = "filaDigital";
+
+function carregarFila() {
+  try {
+    const raw = localStorage.getItem(FILA_STORAGE_KEY);
+    return raw ? JSON.parse(raw) : [];
+  } catch (err) {
+    return [];
+  }
+}
+
+function salvarFila(fila) {
+  localStorage.setItem(FILA_STORAGE_KEY, JSON.stringify(fila));
+}
+
+function renderizarFila() {
+  const lista = document.getElementById("filaLista");
+  if (!lista) return;
+  const fila = carregarFila();
+  lista.innerHTML = "";
+  if (fila.length === 0) {
+    lista.innerHTML = '<li class="fila-vazia">Fila vazia.</li>';
+    return;
+  }
+  fila.forEach((item, index) => {
+    const li = document.createElement("li");
+    li.className = "fila-item" + (item.riscado ? " fila-item-riscado" : "");
+    li.innerHTML = `
+      <span class="fila-item-nome">${escapeHtml(item.nome)}</span>
+      <span class="fila-item-indice">#${index + 1}</span>
+    `;
+    lista.appendChild(li);
+  });
+}
+
+function confirmarFila() {
+  const input = document.getElementById("filaInput");
+  const msgEl = document.getElementById("filaMsg");
+  const nome = input.value.trim();
+  if (!nome) {
+    msgEl.textContent = "Digite um nome para adicionar à fila.";
+    msgEl.className = "msg erro";
+    return;
+  }
+  const fila = carregarFila();
+  fila.push({ nome: nome, criadoEm: Date.now(), riscado: false });
+  salvarFila(fila);
+  input.value = "";
+  msgEl.textContent = "Adicionado à fila.";
+  msgEl.className = "msg sucesso";
+  setTimeout(() => {
+    msgEl.textContent = "";
+    msgEl.className = "msg";
+  }, 2000);
+  renderizarFila();
+}
+
+function riscarFila() {
+  const msgEl = document.getElementById("filaMsg");
+  const fila = carregarFila();
+  if (fila.length === 0) {
+    msgEl.textContent = "A fila está vazia.";
+    msgEl.className = "msg erro";
+    return;
+  }
+  // Encontrar o primeiro item não riscado
+  const idx = fila.findIndex(item => !item.riscado);
+  if (idx === -1) {
+    msgEl.textContent = "Todos os itens já foram riscados.";
+    msgEl.className = "msg erro";
+    return;
+  }
+  fila[idx].riscado = true;
+  // Após 1.2s, remover o item riscado da fila
+  setTimeout(() => {
+    const novaFila = carregarFila().filter((_, i) => i !== idx);
+    salvarFila(novaFila);
+    renderizarFila();
+  }, 1200);
+  salvarFila(fila);
+  renderizarFila();
+  msgEl.textContent = "Item riscado.";
+  msgEl.className = "msg sucesso";
+  setTimeout(() => {
+    msgEl.textContent = "";
+    msgEl.className = "msg";
+  }, 2000);
+}
+
+function limparFila() {
+  const msgEl = document.getElementById("filaMsg");
+  const fila = carregarFila();
+  if (fila.length === 0) {
+    msgEl.textContent = "A fila já está vazia.";
+    msgEl.className = "msg erro";
+    return;
+  }
+  if (!confirm("Tem certeza que deseja limpar toda a fila?")) return;
+  salvarFila([]);
+  renderizarFila();
+  msgEl.textContent = "Fila limpa.";
+  msgEl.className = "msg sucesso";
+  setTimeout(() => {
+    msgEl.textContent = "";
+    msgEl.className = "msg";
+  }, 2000);
+}
+
+// Permitir adicionar com Enter
+window.addEventListener("DOMContentLoaded", () => {
+  const filaInput = document.getElementById("filaInput");
+  if (filaInput) {
+    filaInput.addEventListener("keypress", (e) => {
+      if (e.key === "Enter") {
+        e.preventDefault();
+        confirmarFila();
+      }
+    });
+  }
+  renderizarFila();
+});
