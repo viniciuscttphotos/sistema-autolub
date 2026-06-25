@@ -388,8 +388,7 @@ async function excluirLancamento() {
 
   const result = await apiRequest({
     action: "deleteLancamento",
-    id: document.getElementById("editId").value,
-    senha: "ricardo26"
+    id: document.getElementById("editId").value
   });
 
   if (result.success) {
@@ -432,6 +431,22 @@ async function gerarRelatorio(tipo) {
     }
     params.dataInicio = dataInicio;
     params.dataFim = dataFim;
+  } else if (tipo === "estaSemana") {
+    const hoje = new Date();
+    const diaSemana = hoje.getDay();
+    const diff = diaSemana === 0 ? 6 : diaSemana - 1; // Segunda = 0
+    const segunda = new Date(hoje);
+    segunda.setDate(hoje.getDate() - diff);
+    const domingo = new Date(segunda);
+    domingo.setDate(segunda.getDate() + 6);
+    params.dataInicio = segunda.toISOString().split("T")[0];
+    params.dataFim = domingo.toISOString().split("T")[0];
+  } else if (tipo === "esteMes") {
+    const hoje = new Date();
+    const primeiro = new Date(hoje.getFullYear(), hoje.getMonth(), 1);
+    const ultimo = new Date(hoje.getFullYear(), hoje.getMonth() + 1, 0);
+    params.dataInicio = primeiro.toISOString().split("T")[0];
+    params.dataFim = ultimo.toISOString().split("T")[0];
   } else {
     params.tipo = tipo;
   }
@@ -446,11 +461,27 @@ async function gerarRelatorio(tipo) {
   renderizarRelatorio(result.data);
 }
 
+// ===================== FORMATAÇÃO =====================
+function formatarMoeda(valor) {
+  return valor.toLocaleString("pt-BR", {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2
+  });
+}
+
+function formatarDataCurta(data) {
+  const d = new Date(data);
+  const dia = String(d.getDate()).padStart(2, "0");
+  const mes = String(d.getMonth() + 1).padStart(2, "0");
+  const ano = String(d.getFullYear()).slice(-2);
+  return `${dia}/${mes}/${ano}`;
+}
+
 function renderizarRelatorio(data) {
   const div = document.getElementById("relatorioResultado");
 
-  const inicio = new Date(data.periodo.inicio).toLocaleDateString("pt-BR");
-  const fim = new Date(data.periodo.fim).toLocaleDateString("pt-BR");
+  const inicio = formatarDataCurta(data.periodo.inicio);
+  const fim = formatarDataCurta(data.periodo.fim);
 
   let html = `
     <div class="relatorio-resumo">
@@ -460,7 +491,7 @@ function renderizarRelatorio(data) {
       </div>
       <div class="resumo-card">
         <div class="resumo-label">Total Faturado</div>
-        <div class="resumo-valor">R$ ${data.total.toFixed(2).replace(".", ",")}</div>
+        <div class="resumo-valor">R$ ${formatarMoeda(data.total)}</div>
       </div>
       <div class="resumo-card">
         <div class="resumo-label">Quantidade</div>
@@ -478,7 +509,7 @@ function renderizarRelatorio(data) {
       html += `
         <div class="relatorio-linha">
           <span>${escapeHtml(nome)} (${info.quantidade} lanç.)</span>
-          <span class="valor">R$ ${info.total.toFixed(2).replace(".", ",")}</span>
+          <span class="valor">R$ ${formatarMoeda(info.total)}</span>
         </div>
       `;
     });
@@ -494,7 +525,7 @@ function renderizarRelatorio(data) {
       html += `
         <div class="relatorio-linha">
           <span>${escapeHtml(nome)} (${info.quantidade} lanç.)</span>
-          <span class="valor">R$ ${info.total.toFixed(2).replace(".", ",")}</span>
+          <span class="valor">R$ ${formatarMoeda(info.total)}</span>
         </div>
       `;
     });
@@ -508,14 +539,18 @@ function renderizarRelatorio(data) {
       html += `
         <div class="relatorio-linha">
           <span>${escapeHtml(nome)} (${info.quantidade} lanç.)</span>
-          <span class="valor">R$ ${info.total.toFixed(2).replace(".", ",")}</span>
+          <span class="valor">R$ ${formatarMoeda(info.total)}</span>
         </div>
       `;
     });
     html += `</div>`;
   }
 
+  // Gráfico mês a mês
+  html += gerarGraficoMensalHTML(data.graficoMensal);
+
   div.innerHTML = html;
+  div.dataset.ultimoRelatorio = JSON.stringify(data);
 }
 
 // ===================== LOCADORES (gerenciamento) =====================
@@ -710,3 +745,163 @@ window.addEventListener("DOMContentLoaded", () => {
   }
   renderizarFila();
 });
+
+// ===================== GRÁFICO MÊS A MÊS =====================
+let zoomMensal = 12;
+
+function gerarGraficoMensalHTML(dadosMensais) {
+  if (!dadosMensais || dadosMensais.length === 0) return "";
+
+  let html = `
+    <div class="relatorio-secao grafico-mensal-secao">
+      <h3>Mês a Mês</h3>
+      <div class="grafico-zoom-actions">
+        <button class="btn-sm ${zoomMensal === 12 ? 'btn-primary' : 'btn-secondary'}" onclick="alterarZoomMensal(12)">12 meses</button>
+        <button class="btn-sm ${zoomMensal === 6 ? 'btn-primary' : 'btn-secondary'}" onclick="alterarZoomMensal(6)">6 meses</button>
+        <button class="btn-sm ${zoomMensal === 3 ? 'btn-primary' : 'btn-secondary'}" onclick="alterarZoomMensal(3)">3 meses</button>
+        <button class="btn-sm ${zoomMensal === 1 ? 'btn-primary' : 'btn-secondary'}" onclick="alterarZoomMensal(1)">1 mês</button>
+      </div>
+      <div class="grafico-mensal-container">
+        <canvas id="graficoMensalCanvas"></canvas>
+      </div>
+    </div>
+  `;
+
+  // Agendar o desenho após inserir o HTML
+  setTimeout(() => desenharGraficoMensal(dadosMensais), 50);
+
+  return html;
+}
+
+function alterarZoomMensal(zoom) {
+  zoomMensal = zoom;
+  // Re-renderizar o relatório atual
+  const resultadoDiv = document.getElementById("relatorioResultado");
+  const dataStr = resultadoDiv.dataset.ultimoRelatorio;
+  if (dataStr) {
+    try {
+      const data = JSON.parse(dataStr);
+      desenharGraficoMensal(data.graficoMensal);
+    } catch (e) {
+      // ignorar
+    }
+  }
+}
+
+function desenharGraficoMensal(dadosMensais) {
+  const canvas = document.getElementById("graficoMensalCanvas");
+  if (!canvas || !dadosMensais || dadosMensais.length === 0) return;
+
+  const ctx = canvas.getContext("2d");
+  const dpr = window.devicePixelRatio || 1;
+
+  // Ajustar para telas de alta densidade
+  const rect = canvas.parentElement.getBoundingClientRect();
+  const width = rect.width || 600;
+  const height = 280;
+
+  canvas.width = width * dpr;
+  canvas.height = height * dpr;
+  canvas.style.width = width + "px";
+  canvas.style.height = height + "px";
+  ctx.scale(dpr, dpr);
+
+  // Aplicar zoom
+  const dadosFiltrados = dadosMensais.slice(-zoomMensal);
+
+  // Cores do tema
+  const isDark = document.documentElement.getAttribute("data-theme") === "dark";
+  const corTexto = isDark ? "#e5e5ea" : "#1c1c1e";
+  const corGrade = isDark ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.08)";
+  const corBarra = isDark ? "rgba(255,159,10,0.85)" : "rgba(255,159,10,0.9)";
+  const corBarraHover = isDark ? "rgba(255,159,10,1)" : "rgba(255,159,10,1)";
+  const corFundo = "transparent";
+
+  const padding = { top: 20, right: 20, bottom: 50, left: 70 };
+  const chartW = width - padding.left - padding.right;
+  const chartH = height - padding.top - padding.bottom;
+
+  // Limpar
+  ctx.clearRect(0, 0, width, height);
+
+  // Encontrar valor máximo
+  const maxValor = Math.max(...dadosFiltrados.map(d => d.total), 1);
+
+  // Desenhar linhas de grade
+  ctx.strokeStyle = corGrade;
+  ctx.lineWidth = 1;
+  ctx.font = "11px -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Helvetica Neue', sans-serif";
+  ctx.fillStyle = corTexto;
+  ctx.textAlign = "right";
+
+  const numLinhas = 5;
+  for (let i = 0; i <= numLinhas; i++) {
+    const y = padding.top + (chartH / numLinhas) * i;
+    ctx.beginPath();
+    ctx.moveTo(padding.left, y);
+    ctx.lineTo(width - padding.right, y);
+    ctx.stroke();
+
+    const valor = maxValor - (maxValor / numLinhas) * i;
+    ctx.fillText("R$ " + formatarMoeda(valor), padding.left - 8, y + 4);
+  }
+
+  // Largura das barras
+  const barWidth = Math.min(40, (chartW / dadosFiltrados.length) * 0.6);
+  const gap = (chartW - barWidth * dadosFiltrados.length) / (dadosFiltrados.length + 1);
+
+  // Desenhar barras
+  dadosFiltrados.forEach((d, i) => {
+    const x = padding.left + gap + i * (barWidth + gap);
+    const barH = (d.total / maxValor) * chartH;
+    const y = padding.top + chartH - barH;
+
+    // Sombra
+    ctx.shadowColor = "rgba(255,159,10,0.2)";
+    ctx.shadowBlur = 8;
+    ctx.shadowOffsetY = 2;
+
+    // Barra com gradiente
+    const grad = ctx.createLinearGradient(x, y, x, padding.top + chartH);
+    grad.addColorStop(0, corBarraHover);
+    grad.addColorStop(1, corBarra);
+    ctx.fillStyle = grad;
+    ctx.beginPath();
+    ctx.roundRect(x, y, barWidth, barH, [4, 4, 0, 0]);
+    ctx.fill();
+
+    ctx.shadowColor = "transparent";
+    ctx.shadowBlur = 0;
+    ctx.shadowOffsetY = 0;
+
+    // Rótulo do mês
+    ctx.fillStyle = corTexto;
+    ctx.textAlign = "center";
+    ctx.font = "11px -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Helvetica Neue', sans-serif";
+    ctx.fillText(d.mes, x + barWidth / 2, padding.top + chartH + 18);
+
+    // Valor acima da barra
+    ctx.fillStyle = corBarraHover;
+    ctx.font = "bold 11px -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Helvetica Neue', sans-serif";
+    ctx.fillText("R$ " + formatarMoeda(d.total), x + barWidth / 2, y - 6);
+  });
+}
+
+// Polyfill para roundRect se necessário
+if (!CanvasRenderingContext2D.prototype.roundRect) {
+  CanvasRenderingContext2D.prototype.roundRect = function (x, y, w, h, radii) {
+    const r = Array.isArray(radii) ? radii : [radii, radii, radii, radii];
+    const [tl, tr, br, bl] = r.map(v => Math.min(v || 0, Math.min(w, h) / 2));
+    this.moveTo(x + tl, y);
+    this.lineTo(x + w - tr, y);
+    this.quadraticCurveTo(x + w, y, x + w, y + tr);
+    this.lineTo(x + w, y + h - br);
+    this.quadraticCurveTo(x + w, y + h, x + w - br, y + h);
+    this.lineTo(x + bl, y + h);
+    this.quadraticCurveTo(x, y + h, x, y + h - bl);
+    this.lineTo(x, y + tl);
+    this.quadraticCurveTo(x, y, x + tl, y);
+    this.closePath();
+    return this;
+  };
+}
