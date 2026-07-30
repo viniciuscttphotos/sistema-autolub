@@ -362,7 +362,8 @@ async function salvarEdicao() {
     servico: document.getElementById("editServico").value,
     valor: document.getElementById("editValor").value,
     formaPagamento: document.getElementById("editFormaPagamento").value,
-    parcelas: document.getElementById("editParcelas").value
+    parcelas: document.getElementById("editParcelas").value,
+    senha: "ricardo26"
   });
 
   if (result.success) {
@@ -388,7 +389,8 @@ async function excluirLancamento() {
 
   const result = await apiRequest({
     action: "deleteLancamento",
-    id: document.getElementById("editId").value
+    id: document.getElementById("editId").value,
+    senha: "ricardo26"
   });
 
   if (result.success) {
@@ -613,7 +615,7 @@ async function adicionarLocador() {
 async function removerLocador(nome) {
   if (!confirm(`Excluir o locador "${nome}"?`)) return;
 
-  const result = await apiRequest({ action: "deleteLocador", nome: nome });
+  const result = await apiRequest({ action: "deleteLocador", nome: nome, senha: "ricardo26" });
 
   if (result.success) {
     carregarListaLocadores();
