@@ -21,6 +21,16 @@ function toggleTheme() {
   document.documentElement.setAttribute("data-theme", newTheme);
   localStorage.setItem("autolub_theme", newTheme);
   updateThemeUI(newTheme);
+
+  const relatorio = document.getElementById("relatorioResultado");
+  if (relatorio?.dataset.ultimoRelatorio) {
+    try {
+      const data = JSON.parse(relatorio.dataset.ultimoRelatorio);
+      requestAnimationFrame(() => desenharGraficoMensal(data.graficoMensal));
+    } catch (_) {
+      // O relatório pode ainda estar sendo montado.
+    }
+  }
 }
 
 function updateThemeUI(theme) {
@@ -59,6 +69,14 @@ window.addEventListener("DOMContentLoaded", () => {
   document.getElementById("loginSenha").addEventListener("keypress", (e) => {
     if (e.key === "Enter") doLogin();
   });
+
+  document.getElementById("editModal").addEventListener("click", (e) => {
+    if (e.target.id === "editModal") fecharModal();
+  });
+
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape") fecharModal();
+  });
 });
 
 // ===================== REQUISIÇÃO GENÉRICA =====================
@@ -66,11 +84,20 @@ async function apiRequest(params) {
   const url = new URL(API_URL);
   Object.keys(params).forEach(key => url.searchParams.append(key, params[key]));
 
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 20000);
+
   try {
-    const response = await fetch(url.toString());
+    const response = await fetch(url.toString(), { signal: controller.signal });
+    if (!response.ok) throw new Error(`Servidor indisponível (${response.status})`);
     return await response.json();
   } catch (err) {
-    return { success: false, message: "Erro de conexão: " + err.message };
+    const message = err.name === "AbortError"
+      ? "A solicitação demorou demais. Tente novamente."
+      : "Erro de conexão: " + err.message;
+    return { success: false, message };
+  } finally {
+    clearTimeout(timeout);
   }
 }
 
@@ -86,6 +113,7 @@ function doLogin() {
 
   if (senha === "ricardo26") {
     sessionStorage.setItem("autolub_logado", "true");
+    erroEl.textContent = "";
     mostrarApp();
   } else {
     erroEl.textContent = "Senha incorreta.";
@@ -123,6 +151,8 @@ function togglePassword(inputId, btn) {
 // ===================== ABAS =====================
 function setupTabs() {
   document.querySelectorAll(".tab-btn").forEach(btn => {
+    if (btn.dataset.ready === "true") return;
+    btn.dataset.ready = "true";
     btn.addEventListener("click", () => {
       document.querySelectorAll(".tab-btn").forEach(b => b.classList.remove("active"));
       document.querySelectorAll(".tab-content").forEach(c => c.classList.remove("active"));
@@ -130,6 +160,7 @@ function setupTabs() {
       btn.classList.add("active");
       const tab = btn.getAttribute("data-tab");
       document.getElementById("tab-" + tab).classList.add("active");
+      window.scrollTo({ top: 0, behavior: "smooth" });
 
       if (tab === "locadores") carregarListaLocadores();
       if (tab === "relatorios") verificarAcessoRelatorio();
@@ -191,6 +222,9 @@ async function carregarLocadores() {
 async function salvarLancamento(e) {
   e.preventDefault();
 
+  const submitBtn = e.submitter || e.currentTarget.querySelector('[type="submit"]');
+  const iniciouEm = Date.now();
+
   let atendente = document.getElementById("atendenteSelect").value;
   if (atendente === "Outros") {
     atendente = document.getElementById("atendenteOutro").value.trim();
@@ -210,6 +244,7 @@ async function salvarLancamento(e) {
   const locador = locadora ? document.getElementById("locadorSelect").value : "";
 
   mostrarPopup("Salvando...");
+  if (submitBtn) submitBtn.disabled = true;
 
   const result = await apiRequest({
     action: "addLancamento",
@@ -223,6 +258,7 @@ async function salvarLancamento(e) {
   });
 
   if (result.success) {
+    const tempoRestante = Math.max(0, 5000 - (Date.now() - iniciouEm));
     setTimeout(() => {
       atualizarPopup("Salvo");
       setTimeout(() => {
@@ -231,11 +267,13 @@ async function salvarLancamento(e) {
         document.getElementById("atendenteOutro").classList.add("hidden");
         document.getElementById("parcelasGroup").classList.add("hidden");
         document.getElementById("locadorGroup").classList.add("hidden");
+        if (submitBtn) submitBtn.disabled = false;
         carregarHistorico();
-      }, 2000);
-    }, 5000);
+      }, 900);
+    }, tempoRestante);
   } else {
     fecharPopup();
+    if (submitBtn) submitBtn.disabled = false;
     const msgEl = document.getElementById("lancamentoMsg");
     msgEl.textContent = result.message || "Erro ao salvar.";
     msgEl.className = "msg erro";
@@ -352,8 +390,10 @@ function fecharModal() {
 
 async function salvarEdicao() {
   const msgEl = document.getElementById("editMsg");
+  const button = document.querySelector('.modal-actions .btn-primary');
 
   mostrarPopup("Salvando...");
+  if (button) button.disabled = true;
 
   const result = await apiRequest({
     action: "editLancamento",
@@ -372,9 +412,11 @@ async function salvarEdicao() {
       fecharPopup();
       fecharModal();
       carregarHistorico();
-    }, 5000);
+      if (button) button.disabled = false;
+    }, 900);
   } else {
     fecharPopup();
+    if (button) button.disabled = false;
     msgEl.textContent = result.message;
     msgEl.className = "msg erro";
   }
@@ -386,6 +428,8 @@ async function excluirLancamento() {
   if (!confirm("Tem certeza que deseja excluir este lançamento?")) return;
 
   mostrarPopup("Excluindo...");
+  const button = document.querySelector('.modal-actions .btn-danger');
+  if (button) button.disabled = true;
 
   const result = await apiRequest({
     action: "deleteLancamento",
@@ -399,9 +443,11 @@ async function excluirLancamento() {
       fecharPopup();
       fecharModal();
       carregarHistorico();
-    }, 5000);
+      if (button) button.disabled = false;
+    }, 900);
   } else {
     fecharPopup();
+    if (button) button.disabled = false;
     msgEl.textContent = result.message;
     msgEl.className = "msg erro";
   }
