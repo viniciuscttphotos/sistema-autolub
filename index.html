@@ -3,17 +3,18 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta name="description" content="Livro caixa da Autolub para registro e acompanhamento de serviços, pagamentos e locadores." />
+<meta name="theme-color" content="#111111" />
 <title>Autolub - Livro Caixa</title>
 <link rel="stylesheet" href="style.css" />
 </head>
 <body>
 
-<!-- =========================
 <!-- ===================== TELA DE LOGIN ===================== -->
 <div id="loginScreen" class="screen">
   <div class="login-box">
     <div class="login-theme-toggle">
-      <button class="btn-tertiary" onclick="toggleTheme()" title="Alternar tema">
+      <button type="button" class="btn-tertiary" id="loginThemeBtn" title="Alternar tema" aria-label="Alternar tema">
         <svg id="loginThemeIcon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
         </svg>
@@ -22,19 +23,19 @@
     </div>
     <h1 class="logo">AUTO<span>LUB</span></h1>
     <p class="subtitle">Livro Caixa</p>
-    
+
     <div class="login-form-group">
       <label for="loginSenha">Senha de Acesso</label>
       <div class="password-wrapper">
         <input type="password" id="loginSenha" placeholder="Digite a senha" autocomplete="current-password" />
-        <button type="button" class="toggle-pass" onclick="togglePassword('loginSenha', this)" title="Mostrar/ocultar senha">
+        <button type="button" class="toggle-pass" id="loginPasswordToggleBtn" title="Mostrar senha" aria-label="Mostrar senha" aria-controls="loginSenha" aria-pressed="false">
           <svg class="eye-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
         </button>
       </div>
     </div>
-    
-    <button class="btn-primary" onclick="doLogin()">Entrar</button>
-    <p id="loginErro" class="erro"></p>
+
+    <button type="button" class="btn-primary" id="loginBtn">Entrar</button>
+    <p id="loginErro" class="erro" role="alert" aria-live="assertive"></p>
   </div>
 </div>
 
@@ -43,53 +44,53 @@
 
   <header class="topbar">
     <h1 class="logo">AUTO<span>LUB</span></h1>
-    <nav class="tabs">
-      <button class="tab-btn active" data-tab="lancamento">Novo Lançamento</button>
-      <button class="tab-btn" data-tab="historico">Histórico</button>
-      <button class="tab-btn" data-tab="relatorios">Relatórios</button>
-      <button class="tab-btn" data-tab="locadores">Locadores</button>
+    <nav class="tabs" role="tablist" aria-label="Seções do livro caixa">
+      <button type="button" id="tabBtn-lancamento" class="tab-btn active" data-tab="lancamento" role="tab" aria-selected="true" aria-controls="tab-lancamento" tabindex="0">Novo Lançamento</button>
+      <button type="button" id="tabBtn-historico" class="tab-btn" data-tab="historico" role="tab" aria-selected="false" aria-controls="tab-historico" tabindex="-1">Histórico</button>
+      <button type="button" id="tabBtn-relatorios" class="tab-btn" data-tab="relatorios" role="tab" aria-selected="false" aria-controls="tab-relatorios" tabindex="-1">Relatórios</button>
+      <button type="button" id="tabBtn-locadores" class="tab-btn" data-tab="locadores" role="tab" aria-selected="false" aria-controls="tab-locadores" tabindex="-1">Locadores</button>
     </nav>
     <div class="theme-toggle">
-      <button class="btn-secondary" id="themeToggleBtn" onclick="toggleTheme()" title="Alternar tema">
+      <button type="button" class="btn-secondary" id="themeToggleBtn" title="Alternar tema" aria-label="Alternar tema">
         <svg id="themeIcon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
         </svg>
         <span id="themeText">Tema Claro</span>
       </button>
     </div>
-    <button class="logout-btn" onclick="logout()">Sair</button>
+    <button type="button" class="logout-btn" id="logoutBtn">Sair</button>
   </header>
 
   <main>
 
     <!-- ===================== ABA: NOVO LANÇAMENTO ===================== -->
-    <section id="tab-lancamento" class="tab-content active">
+    <section id="tab-lancamento" class="tab-content active" role="tabpanel" aria-labelledby="tabBtn-lancamento" tabindex="0">
       <h2>Novo Lançamento</h2>
-      <form id="formLancamento">
+      <form id="formLancamento" aria-busy="false">
 
         <div class="form-group">
-          <label>Atendente</label>
-          <select id="atendenteSelect" onchange="toggleOutroAtendente()">
+          <label for="atendenteSelect">Atendente</label>
+          <select id="atendenteSelect">
             <option value="Paulinho">Paulinho</option>
             <option value="Luan">Luan</option>
             <option value="Outros">Outros</option>
           </select>
-          <input type="text" id="atendenteOutro" class="hidden" placeholder="Digite o nome do atendente" />
+          <input type="text" id="atendenteOutro" class="hidden" placeholder="Digite o nome do atendente" aria-label="Nome do outro atendente" />
         </div>
 
         <div class="form-group">
-          <label>Serviço / Produtos</label>
+          <label for="servico">Serviço / Produtos</label>
           <textarea id="servico" rows="3" placeholder="Descreva o serviço prestado e/ou produtos vendidos" required></textarea>
         </div>
 
         <div class="form-group">
-          <label>Valor (R$)</label>
+          <label for="valor">Valor (R$)</label>
           <input type="number" id="valor" step="0.01" min="0" placeholder="0.00" required />
         </div>
 
         <div class="form-group">
-          <label>Forma de Pagamento</label>
-          <select id="formaPagamento" onchange="togglePagamento()">
+          <label for="formaPagamento">Forma de Pagamento</label>
+          <select id="formaPagamento">
             <option value="Dinheiro">Dinheiro</option>
             <option value="Débito">Cartão de Débito</option>
             <option value="Pix">Pix</option>
@@ -98,137 +99,137 @@
         </div>
 
         <div class="form-group hidden" id="parcelasGroup">
-          <label>Número de Parcelas (0 ou 1 = crédito à vista)</label>
+          <label for="parcelas">Número de Parcelas (0 ou 1 = crédito à vista)</label>
           <input type="number" id="parcelas" min="0" max="12" value="1" />
         </div>
 
         <div class="form-group checkbox-group">
-          <label class="checkbox-label">
-            <input type="checkbox" id="locadoraCheck" onchange="toggleLocador()" />
+          <label class="checkbox-label" for="locadoraCheck">
+            <input type="checkbox" id="locadoraCheck" />
             Carro de Locadora
           </label>
         </div>
 
         <div class="form-group hidden" id="locadorGroup">
-          <label>Locador</label>
+          <label for="locadorSelect">Locador</label>
           <select id="locadorSelect"></select>
         </div>
 
         <button type="submit" class="btn-primary">Salvar Lançamento</button>
-        <p id="lancamentoMsg" class="msg"></p>
+        <p id="lancamentoMsg" class="msg" role="status" aria-live="polite"></p>
       </form>
 
       <!-- ===================== FILA DIGITAL ===================== -->
       <div class="fila-digital">
         <h2>Fila Digital</h2>
         <div class="fila-input-group">
-          <input type="text" id="filaInput" placeholder="Nome do próximo cliente / item" />
-          <button type="button" class="btn-fila-confirmar" onclick="confirmarFila()">Confirmar</button>
+          <input type="text" id="filaInput" placeholder="Nome do próximo cliente / item" aria-label="Próximo cliente ou item da fila" />
+          <button type="button" class="btn-fila-confirmar" id="filaConfirmarBtn">Confirmar</button>
         </div>
         <div class="fila-acoes">
-          <button type="button" class="btn-fila-riscar" onclick="riscarFila()">Riscar</button>
-          <button type="button" class="btn-fila-limpar" onclick="limparFila()">Limpar Fila</button>
+          <button type="button" class="btn-fila-riscar" id="filaRiscarBtn">Riscar</button>
+          <button type="button" class="btn-fila-limpar" id="filaLimparBtn">Limpar Fila</button>
         </div>
-        <ul id="filaLista" class="fila-lista"></ul>
-        <p id="filaMsg" class="msg"></p>
+        <ul id="filaLista" class="fila-lista" aria-live="polite" aria-relevant="additions removals"></ul>
+        <p id="filaMsg" class="msg" role="status" aria-live="polite"></p>
       </div>
     </section>
 
     <!-- ===================== ABA: HISTÓRICO ===================== -->
-    <section id="tab-historico" class="tab-content">
+    <section id="tab-historico" class="tab-content" role="tabpanel" aria-labelledby="tabBtn-historico" tabindex="0">
       <h2>Histórico de Lançamentos</h2>
 
       <div class="filtros">
         <div class="form-group">
-          <label>Data Início</label>
+          <label for="histDataInicio">Data Início</label>
           <input type="date" id="histDataInicio" />
         </div>
         <div class="form-group">
-          <label>Data Fim</label>
+          <label for="histDataFim">Data Fim</label>
           <input type="date" id="histDataFim" />
         </div>
         <div class="form-group">
-          <label>Atendente</label>
+          <label for="histAtendente">Atendente</label>
           <select id="histAtendente">
             <option value="">Todos</option>
             <option value="Paulinho">Paulinho</option>
             <option value="Luan">Luan</option>
           </select>
         </div>
-        <button class="btn-secondary" onclick="carregarHistorico()">Filtrar</button>
+        <button type="button" class="btn-secondary" id="historicoFiltrarBtn">Filtrar</button>
       </div>
 
-      <div id="historicoLista" class="lista"></div>
+      <div id="historicoLista" class="lista" aria-live="polite" aria-busy="false"></div>
     </section>
 
     <!-- ===================== ABA: RELATÓRIOS ===================== -->
-    <section id="tab-relatorios" class="tab-content">
+    <section id="tab-relatorios" class="tab-content" role="tabpanel" aria-labelledby="tabBtn-relatorios" tabindex="0">
       <h2>Relatórios</h2>
 
       <div id="relatorioConteudo">
 
         <div class="filtros">
-          <button class="btn-secondary" onclick="gerarRelatorio('diario')">Diário</button>
-          <button class="btn-secondary" onclick="gerarRelatorio('semanal')">Semanal</button>
-          <button class="btn-secondary" onclick="gerarRelatorio('mensal')">Mensal</button>
-          <button class="btn-secondary" onclick="gerarRelatorio('estaSemana')">Esta Semana</button>
-          <button class="btn-secondary" onclick="gerarRelatorio('esteMes')">Este Mês</button>
+          <button type="button" class="btn-secondary relatorio-periodo-btn" data-report-type="diario">Diário</button>
+          <button type="button" class="btn-secondary relatorio-periodo-btn" data-report-type="semanal">Semanal</button>
+          <button type="button" class="btn-secondary relatorio-periodo-btn" data-report-type="mensal">Mensal</button>
+          <button type="button" class="btn-secondary relatorio-periodo-btn" data-report-type="estaSemana">Esta Semana</button>
+          <button type="button" class="btn-secondary relatorio-periodo-btn" data-report-type="esteMes">Este Mês</button>
         </div>
 
         <div class="filtros">
           <div class="form-group">
-            <label>Data Início</label>
+            <label for="relDataInicio">Data Início</label>
             <input type="date" id="relDataInicio" />
           </div>
           <div class="form-group">
-            <label>Data Fim</label>
+            <label for="relDataFim">Data Fim</label>
             <input type="date" id="relDataFim" />
           </div>
-          <button class="btn-secondary" onclick="gerarRelatorio('custom')">Buscar Período</button>
+          <button type="button" class="btn-secondary" id="relatorioCustomBtn">Buscar Período</button>
         </div>
 
-        <div id="relatorioResultado"></div>
+        <div id="relatorioResultado" aria-live="polite" aria-busy="false"></div>
 
       </div>
     </section>
 
     <!-- ===================== ABA: LOCADORES ===================== -->
-    <section id="tab-locadores" class="tab-content">
+    <section id="tab-locadores" class="tab-content" role="tabpanel" aria-labelledby="tabBtn-locadores" tabindex="0">
       <h2>Gerenciar Locadores</h2>
 
       <div class="form-group">
-        <label>Novo Locador</label>
+        <label for="novoLocador">Novo Locador</label>
         <input type="text" id="novoLocador" placeholder="Nome do locador" />
-        <button class="btn-primary" onclick="adicionarLocador()">Adicionar</button>
-        <p id="locadorMsg" class="msg"></p>
+        <button type="button" class="btn-primary" id="locadorAdicionarBtn">Adicionar</button>
+        <p id="locadorMsg" class="msg" role="status" aria-live="polite"></p>
       </div>
 
-      <div id="locadoresLista" class="lista"></div>
+      <div id="locadoresLista" class="lista" aria-live="polite" aria-busy="false"></div>
     </section>
 
   </main>
 </div>
 
 <!-- ===================== MODAL EDIÇÃO ===================== -->
-<div id="editModal" class="modal hidden">
-  <div class="modal-box">
-    <h3>Editar / Excluir Lançamento</h3>
+<div id="editModal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="editModalTitle" aria-describedby="editMsg" tabindex="-1">
+  <div class="modal-box" role="document">
+    <h3 id="editModalTitle">Editar / Excluir Lançamento</h3>
     <input type="hidden" id="editId" />
 
     <div class="form-group">
-      <label>Atendente</label>
+      <label for="editAtendente">Atendente</label>
       <input type="text" id="editAtendente" />
     </div>
     <div class="form-group">
-      <label>Serviço</label>
+      <label for="editServico">Serviço</label>
       <textarea id="editServico" rows="2"></textarea>
     </div>
     <div class="form-group">
-      <label>Valor (R$)</label>
+      <label for="editValor">Valor (R$)</label>
       <input type="number" id="editValor" step="0.01" />
     </div>
     <div class="form-group">
-      <label>Forma de Pagamento</label>
+      <label for="editFormaPagamento">Forma de Pagamento</label>
       <select id="editFormaPagamento">
         <option value="Dinheiro">Dinheiro</option>
         <option value="Débito">Cartão de Débito</option>
@@ -237,26 +238,26 @@
       </select>
     </div>
     <div class="form-group">
-      <label>Parcelas</label>
+      <label for="editParcelas">Parcelas</label>
       <input type="number" id="editParcelas" min="0" max="12" />
     </div>
     <div class="modal-actions">
-      <button class="btn-primary" onclick="salvarEdicao()">Salvar Alterações</button>
-      <button class="btn-danger" onclick="excluirLancamento()">Excluir</button>
-      <button class="btn-secondary" onclick="fecharModal()">Cancelar</button>
+      <button type="button" class="btn-primary" id="editSalvarBtn">Salvar Alterações</button>
+      <button type="button" class="btn-danger" id="editExcluirBtn">Excluir</button>
+      <button type="button" class="btn-secondary" id="editCancelarBtn">Cancelar</button>
     </div>
-    <p id="editMsg" class="msg"></p>
+    <p id="editMsg" class="msg" role="status" aria-live="polite"></p>
   </div>
 </div>
 
 <!-- ===================== POPUP ===================== -->
-<div id="popupSalvando" class="popup-overlay hidden">
+<div id="popupSalvando" class="popup-overlay hidden" role="status" aria-live="polite" aria-atomic="true">
   <div class="popup-box">
     <div class="popup-spinner"></div>
     <p id="popupTexto">Salvando...</p>
   </div>
 </div>
 
-<script src="script.js"></script>
+<script type="module" src="script.js"></script>
 </body>
 </html>

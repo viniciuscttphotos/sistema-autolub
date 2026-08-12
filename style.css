@@ -71,6 +71,7 @@ body {
 button, input, select, textarea { font: inherit; }
 button, .item-card { -webkit-tap-highlight-color: transparent; }
 button { touch-action: manipulation; }
+.modal-open { overflow: hidden; }
 .hidden { display: none !important; }
 
 /* Login */
@@ -315,6 +316,10 @@ button:disabled { opacity: .56; cursor: wait; transform: none !important; }
 .filtros > button { width: 100%; }
 .lista { display: grid; gap: 10px; }
 .item-card {
+  width: 100%;
+  color: inherit;
+  font: inherit;
+  text-align: left;
   display: grid;
   gap: 12px;
   padding: 17px;
